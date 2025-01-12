@@ -1,57 +1,83 @@
-const clearBtn = document.querySelector("#clear");
-const equals = document.querySelector(".equals");
-const display = document.querySelector("#display");
-
-const numberButtons = document.querySelectorAll(".number");
-const operatorButtons = document.querySelectorAll(".operator");
-
-let firstOperand = "";
-let secondOperand = "";
-let currentOperator = "";
-let shouldResetDisplay = false;
+const numberButtons = document.querySelectorAll("[data-number]");
+const operationButtons = document.querySelectorAll("[data-operation]");
+const allClearButton = document.querySelector("[data-all-clear]");
+const equalsButton = document.querySelector("[data-equals]");
+const previousOperandText = document.querySelector("[data-previous-operand]");
+const currentOperandText = document.querySelector("[data-current-operand]");
+const deleteButton = document.querySelector("[data-delete]");
+const decimalButton = document.querySelector("[data-decimal]");
+let currentOperand = "";
+let previousOperand = "";
+let operation = null;
 
 numberButtons.forEach((button) => {
   button.addEventListener("click", function () {
-    if (shouldResetDisplay) {
-      display.textContent = "";
-    }
-    display.textContent += button.textContent;
+    currentOperand += button.textContent;
+    previousOperandText.textContent = currentOperand;
   });
 });
-
-operatorButtons.forEach((button) => {
+operationButtons.forEach((button) => {
   button.addEventListener("click", function () {
-    if (currentOperator) evaluate();
-    firstOperand = display.textContent;
-    currentOperator = button.textContent;
-    shouldResetDisplay = true;
+    if (currentOperand === "") return;
+    if (previousOperand !== "") {
+      calculate();
+    }
+    operation = button.textContent;
+    previousOperand = currentOperand;
+    currentOperand = "";
+    previousOperandText.textContent = previousOperand + " " + operation;
   });
 });
 
-equals.addEventListener("click", function () {
-  if (!currentOperator || shouldResetDisplay) return;
-  evaluate();
-  currentOperator = "";
+equalsButton.addEventListener("click", () => {
+  if (currentOperand === "" || previousOperand === "") return;
+  calculate();
+  currentOperandText.textContent = currentOperand;
+  previousOperandText.textContent = "";
+  previousOperand = "";
 });
 
-const evaluate = function () {
-  secondOperand = display.textContent;
-  console.log("First Operand:", firstOperand);
-  console.log("Second Operand:", secondOperand);
-  console.log("Operator:", currentOperator);
-  const first = parseFloat(firstOperand);
-  const second = parseFloat(secondOperand);
-
+function calculate() {
   let result;
-  if (currentOperator === "+") {
-    result = first + second;
-  } else if (currentOperator === "-") {
-    result = first - second;
-  } else if (currentOperator === "x") {
-    result = first * second;
-  } else if (currentOperator === "/") {
-    result = first / second;
+  const prev = parseFloat(previousOperand);
+  const current = parseFloat(currentOperand);
+  if (isNaN(prev) || isNaN(current)) return;
+
+  switch (operation) {
+    case "+":
+      result = prev + current;
+      break;
+    case "-":
+      result = prev - current;
+      break;
+    case "x":
+      result = prev * current;
+      break;
+    case "/":
+      result = prev / current;
+      break;
+    default:
+      return;
   }
-  display.textContent = result.toString();
-  shouldResetDisplay = true;
-};
+  currentOperand = result.toString();
+}
+allClearButton.addEventListener("click", () => {
+  currentOperand = "";
+  previousOperand = "";
+  operation = null;
+  currentOperandText.textContent = "";
+  previousOperandText.textContent = "";
+});
+deleteButton.addEventListener("click", () => {
+  if (currentOperand === "") return;
+  currentOperand = currentOperand.slice(0, -1);
+  currentOperandText.textContent = currentOperand;
+
+  previousOperandText.textContent =
+    previousOperand && operation ? previousOperand + " " + operation : "";
+});
+decimalButton.addEventListener("click", () => {
+  if (currentOperand.includes(".")) return;
+  currentOperand += ".";
+  currentOperandText.textContent = currentOperand;
+});
